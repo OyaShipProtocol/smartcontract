@@ -1,5 +1,5 @@
 #![no_std]
-use soroban_sdk::{contract, contractimpl, contracttype, token, Address, Env, String, Vec};
+use soroban_sdk::{contract, contractimpl, contracttype, symbol_short, token, Address, Env, String, Vec};
 
 #[contracttype]
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -80,6 +80,11 @@ impl EscrowContract {
         Self::push_user_deal(&env, &buyer, id);
         Self::push_user_deal(&env, &seller, id);
 
+        env.events().publish(
+            (symbol_short!("deal"), symbol_short!("created")),
+            (id, buyer, seller, amount),
+        );
+
         id
     }
 
@@ -88,8 +93,14 @@ impl EscrowContract {
         let mut deal: Deal = env.storage().persistent().get(&DataKey::Deal(deal_id)).unwrap();
         assert!(deal.seller == seller, "not the seller");
         assert!(deal.status == DealStatus::Created, "invalid status");
+
         deal.status = DealStatus::Shipped;
         env.storage().persistent().set(&DataKey::Deal(deal_id), &deal);
+
+        env.events().publish(
+            (symbol_short!("deal"), symbol_short!("shipped")),
+            (deal_id, seller),
+        );
     }
 
     pub fn confirm_received(env: Env, buyer: Address, deal_id: u64) {
@@ -108,6 +119,11 @@ impl EscrowContract {
             .get(&DataKey::Reputation(deal.seller.clone())).unwrap_or(0);
         env.storage().persistent()
             .set(&DataKey::Reputation(deal.seller.clone()), &(rep + 1));
+
+        env.events().publish(
+            (symbol_short!("deal"), symbol_short!("done")),
+            (deal_id, deal.seller, deal.amount),
+        );
     }
 
     pub fn cancel_deal(env: Env, buyer: Address, deal_id: u64) {
@@ -121,6 +137,11 @@ impl EscrowContract {
 
         token::Client::new(&env, &deal.token)
             .transfer(&env.current_contract_address(), &deal.buyer, &deal.amount);
+
+        env.events().publish(
+            (symbol_short!("deal"), symbol_short!("cancel")),
+            (deal_id, deal.buyer),
+        );
     }
 
     pub fn raise_dispute(env: Env, caller: Address, deal_id: u64) {
@@ -133,6 +154,11 @@ impl EscrowContract {
         );
         deal.status = DealStatus::Disputed;
         env.storage().persistent().set(&DataKey::Deal(deal_id), &deal);
+
+        env.events().publish(
+            (symbol_short!("deal"), symbol_short!("dispute")),
+            (deal_id, caller),
+        );
     }
 
     pub fn resolve_dispute(env: Env, arbiter: Address, deal_id: u64, refund_buyer: bool) {
@@ -149,6 +175,11 @@ impl EscrowContract {
         let recipient = if refund_buyer { deal.buyer.clone() } else { deal.seller.clone() };
         token::Client::new(&env, &deal.token)
             .transfer(&env.current_contract_address(), &recipient, &deal.amount);
+
+        env.events().publish(
+            (symbol_short!("deal"), symbol_short!("resolve")),
+            (deal_id, refund_buyer),
+        );
     }
 
     pub fn get_deal(env: Env, deal_id: u64) -> Deal {
