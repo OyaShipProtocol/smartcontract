@@ -10,6 +10,7 @@ pub enum DealStatus {
     Disputed,
     Resolved,
     Cancelled,
+    Expired,
 }
 
 #[contracttype]
@@ -57,6 +58,7 @@ impl EscrowContract {
         buyer.require_auth();
         assert!(amount > 0, "amount must be positive");
         assert!(buyer != seller, "buyer cannot be seller");
+        assert!(deadline > env.ledger().timestamp(), "deadline must be in the future");
 
         token::Client::new(&env, &token)
             .transfer(&buyer, &env.current_contract_address(), &amount);
@@ -93,6 +95,7 @@ impl EscrowContract {
         let mut deal: Deal = env.storage().persistent().get(&DataKey::Deal(deal_id)).unwrap();
         assert!(deal.seller == seller, "not the seller");
         assert!(deal.status == DealStatus::Created, "invalid status");
+        assert!(env.ledger().timestamp() <= deal.deadline, "deal deadline has passed");
 
         deal.status = DealStatus::Shipped;
         env.storage().persistent().set(&DataKey::Deal(deal_id), &deal);
@@ -100,6 +103,25 @@ impl EscrowContract {
         env.events().publish(
             (symbol_short!("deal"), symbol_short!("shipped")),
             (deal_id, seller),
+        );
+    }
+
+    /// Anyone can trigger expiry once the deadline has passed and the deal is still unshipped.
+    /// Refunds the buyer automatically.
+    pub fn expire_deal(env: Env, deal_id: u64) {
+        let mut deal: Deal = env.storage().persistent().get(&DataKey::Deal(deal_id)).unwrap();
+        assert!(deal.status == DealStatus::Created, "can only expire unshipped deals");
+        assert!(env.ledger().timestamp() > deal.deadline, "deadline not yet passed");
+
+        deal.status = DealStatus::Expired;
+        env.storage().persistent().set(&DataKey::Deal(deal_id), &deal);
+
+        token::Client::new(&env, &deal.token)
+            .transfer(&env.current_contract_address(), &deal.buyer, &deal.amount);
+
+        env.events().publish(
+            (symbol_short!("deal"), symbol_short!("expired")),
+            (deal_id, deal.buyer),
         );
     }
 
