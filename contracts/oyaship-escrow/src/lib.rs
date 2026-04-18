@@ -106,8 +106,6 @@ impl EscrowContract {
         );
     }
 
-    /// Anyone can trigger expiry once the deadline has passed and the deal is still unshipped.
-    /// Refunds the buyer automatically.
     pub fn expire_deal(env: Env, deal_id: u64) {
         let mut deal: Deal = env.storage().persistent().get(&DataKey::Deal(deal_id)).unwrap();
         assert!(deal.status == DealStatus::Created, "can only expire unshipped deals");
@@ -221,4 +219,106 @@ impl EscrowContract {
 }
 
 #[cfg(test)]
-mod test {}
+mod test {
+    use super::*;
+    use soroban_sdk::{
+        testutils::{Address as _, Ledger},
+        token::{Client as TokenClient, StellarAssetClient},
+        Env,
+    };
+
+    fn setup(env: &Env) -> (EscrowContractClient, Address, Address, Address, Address) {
+        env.mock_all_auths();
+        let contract_id = env.register_contract(None, EscrowContract);
+        let client  = EscrowContractClient::new(env, &contract_id);
+        let arbiter = Address::generate(env);
+        let buyer   = Address::generate(env);
+        let seller  = Address::generate(env);
+        let admin   = Address::generate(env);
+        let token   = env.register_stellar_asset_contract(admin.clone());
+        StellarAssetClient::new(env, &token).mint(&buyer, &1_000_000_000);
+        client.initialize(&arbiter);
+        env.ledger().set_timestamp(1_000);
+        (client, arbiter, buyer, seller, token)
+    }
+
+    #[test]
+    fn test_happy_path() {
+        let env = Env::default();
+        let (client, _, buyer, seller, token) = setup(&env);
+
+        let id = client.create_deal(
+            &buyer, &seller, &token, &500_000_000,
+            &String::from_str(&env, "500 phone cases"), &2_000,
+        );
+        client.mark_shipped(&seller, &id);
+        client.confirm_received(&buyer, &id);
+
+        assert_eq!(client.get_deal(&id).status, DealStatus::Confirmed);
+        assert_eq!(client.get_reputation(&seller), 1);
+        assert_eq!(TokenClient::new(&env, &token).balance(&seller), 500_000_000);
+    }
+
+    #[test]
+    fn test_cancel_refunds_buyer() {
+        let env = Env::default();
+        let (client, _, buyer, seller, token) = setup(&env);
+
+        let id = client.create_deal(
+            &buyer, &seller, &token, &500_000_000,
+            &String::from_str(&env, "test"), &2_000,
+        );
+        client.cancel_deal(&buyer, &id);
+
+        assert_eq!(client.get_deal(&id).status, DealStatus::Cancelled);
+        assert_eq!(TokenClient::new(&env, &token).balance(&buyer), 1_000_000_000);
+    }
+
+    #[test]
+    fn test_dispute_resolved_for_buyer() {
+        let env = Env::default();
+        let (client, arbiter, buyer, seller, token) = setup(&env);
+
+        let id = client.create_deal(
+            &buyer, &seller, &token, &500_000_000,
+            &String::from_str(&env, "disputed"), &2_000,
+        );
+        client.raise_dispute(&buyer, &id);
+        client.resolve_dispute(&arbiter, &id, &true);
+
+        assert_eq!(client.get_deal(&id).status, DealStatus::Resolved);
+        assert_eq!(TokenClient::new(&env, &token).balance(&buyer), 1_000_000_000);
+    }
+
+    #[test]
+    fn test_dispute_resolved_for_seller() {
+        let env = Env::default();
+        let (client, arbiter, buyer, seller, token) = setup(&env);
+
+        let id = client.create_deal(
+            &buyer, &seller, &token, &500_000_000,
+            &String::from_str(&env, "disputed"), &2_000,
+        );
+        client.raise_dispute(&seller, &id);
+        client.resolve_dispute(&arbiter, &id, &false);
+
+        assert_eq!(TokenClient::new(&env, &token).balance(&seller), 500_000_000);
+    }
+
+    #[test]
+    fn test_expire_deal() {
+        let env = Env::default();
+        let (client, _, buyer, seller, token) = setup(&env);
+
+        let id = client.create_deal(
+            &buyer, &seller, &token, &500_000_000,
+            &String::from_str(&env, "expiring"), &2_000,
+        );
+
+        env.ledger().set_timestamp(3_000);
+        client.expire_deal(&id);
+
+        assert_eq!(client.get_deal(&id).status, DealStatus::Expired);
+        assert_eq!(TokenClient::new(&env, &token).balance(&buyer), 1_000_000_000);
+    }
+}
