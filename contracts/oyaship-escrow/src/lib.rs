@@ -202,6 +202,8 @@ impl EscrowContract {
         );
     }
 
+    // ── Read functions ──────────────────────────────────────────────────────
+
     pub fn get_deal(env: Env, deal_id: u64) -> Deal {
         env.storage().persistent().get(&DataKey::Deal(deal_id)).unwrap()
     }
@@ -209,6 +211,21 @@ impl EscrowContract {
     pub fn get_reputation(env: Env, user: Address) -> u64 {
         env.storage().persistent().get(&DataKey::Reputation(user)).unwrap_or(0)
     }
+
+    /// Returns all deal IDs associated with a user (as buyer or seller).
+    pub fn get_user_deals(env: Env, user: Address) -> Vec<u64> {
+        env.storage()
+            .persistent()
+            .get(&DataKey::UserDeals(user))
+            .unwrap_or(Vec::new(&env))
+    }
+
+    /// Returns the current arbiter address.
+    pub fn get_arbiter(env: Env) -> Address {
+        env.storage().instance().get(&DataKey::Arbiter).unwrap()
+    }
+
+    // ── Internal ────────────────────────────────────────────────────────────
 
     fn push_user_deal(env: &Env, user: &Address, deal_id: u64) {
         let key = DataKey::UserDeals(user.clone());
@@ -320,5 +337,24 @@ mod test {
 
         assert_eq!(client.get_deal(&id).status, DealStatus::Expired);
         assert_eq!(TokenClient::new(&env, &token).balance(&buyer), 1_000_000_000);
+    }
+
+    #[test]
+    fn test_get_user_deals() {
+        let env = Env::default();
+        let (client, _, buyer, seller, token) = setup(&env);
+
+        let id1 = client.create_deal(
+            &buyer, &seller, &token, &100_000_000,
+            &String::from_str(&env, "deal 1"), &2_000,
+        );
+        let id2 = client.create_deal(
+            &buyer, &seller, &token, &100_000_000,
+            &String::from_str(&env, "deal 2"), &2_000,
+        );
+
+        let buyer_deals = client.get_user_deals(&buyer);
+        assert!(buyer_deals.contains(&id1));
+        assert!(buyer_deals.contains(&id2));
     }
 }
