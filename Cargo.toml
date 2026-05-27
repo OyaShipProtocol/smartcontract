@@ -1,9 +1,9 @@
 [workspace]
 resolver = "2"
 members = [
-    "contracts/oyaship-escrow",
-    "contracts/oyaship-marketplace",
-    "contracts/oyaship-reputation",
+    "contracts/sendxpress-escrow",
+    "contracts/sendxpress-marketplace",
+    "contracts/sendxpress-reputation",
 ]
 
 [workspace.package]
