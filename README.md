@@ -1,6 +1,6 @@
 <div align="center">
 
-# OyaShip Smart Contract
+# SendXpress Smart Contract
 
 **Soroban escrow contract for trustless cross-border trade on Stellar.**
 
@@ -15,15 +15,15 @@
 
 ## Overview
 
-This is the escrow smart contract for **OyaShip** — a social commerce platform where importers and suppliers transact safely using onchain escrow on Stellar.
+This is the escrow smart contract for **SendXpress** — a social commerce platform where importers and suppliers transact safely using onchain escrow on Stellar.
 
 The contract manages the full deal lifecycle: a buyer locks tokens, a seller ships goods, the buyer confirms receipt, and the contract releases funds. If a dispute arises, a designated arbiter resolves it onchain.
 
 Written in **Rust** using the **Soroban SDK**. Deployed on **Stellar testnet**.
 
 **Related repos:**
-- [OyaShip/mobile](https://github.com/OyaShip/mobile) — SwiftUI iOS app
-- [OyaShip/backend](https://github.com/OyaShip/backend) — Node.js API
+- [SendXpress/mobile](https://github.com/SendXpress/mobile) — SwiftUI iOS app
+- [SendXpress/backend](https://github.com/SendXpress/backend) — Node.js API
 
 ---
 
@@ -147,7 +147,7 @@ struct Deal {
 smartcontract/
 ├── Cargo.toml                         Workspace config
 ├── contracts/
-│   └── oyaship-escrow/
+│   └── SendXpress-escrow/
 │       ├── Cargo.toml                 Crate config (soroban-sdk 21.7.1)
 │       └── src/
 │           └── lib.rs                 Full escrow contract
@@ -168,12 +168,12 @@ smartcontract/
 ### Build
 
 ```bash
-git clone https://github.com/OyaShip/smartcontract.git
+git clone https://github.com/SendXpress/smartcontract.git
 cd smartcontract
 soroban contract build
 ```
 
-The compiled WASM will be at `target/wasm32-unknown-unknown/release/oyaship_escrow.wasm`.
+The compiled WASM will be at `target/wasm32-unknown-unknown/release/SendXpress_escrow.wasm`.
 
 ### Test
 
