@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to the OyaShip smart contracts are documented here.
+All notable changes to the SendXpress smart contracts are documented here.
 
 ## [Unreleased]
 
