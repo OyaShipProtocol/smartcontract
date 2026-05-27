@@ -1,4 +1,4 @@
-# Contributing to OyaShip Smart Contracts
+# Contributing to SendXpress Smart Contracts
 
 Thank you for your interest in contributing!
 
