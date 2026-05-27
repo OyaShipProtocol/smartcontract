@@ -8,10 +8,10 @@
 
 ## Reporting a Vulnerability
 
-If you discover a security vulnerability in the OyaShip smart contracts or backend,
+If you discover a security vulnerability in the SendXpress smart contracts or backend,
 please **do not open a public GitHub issue**.
 
-Instead, email the maintainers directly at: **security@oyaship.app**
+Instead, email the maintainers directly at: **security@SendXpress.app**
 
 Please include:
 - A description of the vulnerability
@@ -24,7 +24,7 @@ We aim to respond within **48 hours** and will keep you updated on the fix timel
 ## Scope
 
 The following are in scope:
-- `contracts/oyaship-escrow` — Soroban escrow contract
+- `contracts/SendXpress-escrow` — Soroban escrow contract
 - `backend/` — Node.js API
 - Any logic that handles user funds or authentication
 
