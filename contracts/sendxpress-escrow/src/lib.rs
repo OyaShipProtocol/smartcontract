@@ -1,4 +1,4 @@
-//! # OyaShip Escrow Contract
+//! # SendXpress Escrow Contract
 //!
 //! Trustless escrow for cross-border trade on Stellar/Soroban.
 //!

@@ -1,5 +1,5 @@
 [package]
-name    = "oyaship-marketplace"
+name    = "sendxpress-escrow"
 version.workspace = true
 edition.workspace = true
 

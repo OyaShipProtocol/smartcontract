@@ -1,6 +1,6 @@
-//! # OyaShip Marketplace Contract
+//! # SendXpress Marketplace Contract
 //!
-//! On-chain product listing registry for the OyaShip cross-border trade platform.
+//! On-chain product listing registry for the SendXpress cross-border trade platform.
 //!
 //! ## What lives on-chain
 //! - Product listings: name, category, price, token accepted, stock, MOQ
@@ -9,7 +9,7 @@
 //!
 //! ## What stays off-chain
 //! - Images, long descriptions, chat messages, shipping details
-//!   (stored in the OyaShip backend and anchored via `metadata_hash`)
+//!   (stored in the SendXpress backend and anchored via `metadata_hash`)
 
 #![no_std]
 

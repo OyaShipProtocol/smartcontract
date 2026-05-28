@@ -147,7 +147,7 @@ struct Deal {
 smartcontract/
 ├── Cargo.toml                         Workspace config
 ├── contracts/
-│   └── SendXpress-escrow/
+│   └── sendxpress-escrow/
 │       ├── Cargo.toml                 Crate config (soroban-sdk 21.7.1)
 │       └── src/
 │           └── lib.rs                 Full escrow contract
@@ -173,7 +173,7 @@ cd smartcontract
 soroban contract build
 ```
 
-The compiled WASM will be at `target/wasm32-unknown-unknown/release/SendXpress_escrow.wasm`.
+The compiled WASM will be at `target/wasm32-unknown-unknown/release/sendxpress_escrow.wasm`.
 
 ### Test
 

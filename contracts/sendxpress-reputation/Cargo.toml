@@ -1,5 +1,5 @@
 [package]
-name    = "oyaship-escrow"
+name    = "sendxpress-reputation"
 version.workspace = true
 edition.workspace = true
 

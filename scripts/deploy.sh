@@ -1,5 +1,5 @@
 #!/bin/bash
-# Deploy OyaShip Escrow to Stellar testnet or mainnet
+# Deploy SendXpress Escrow to Stellar testnet or mainnet
 # Usage: ./scripts/deploy.sh [testnet|mainnet]
 set -euo pipefail
 
@@ -24,7 +24,7 @@ fi
 echo "▸ Building contracts..."
 soroban contract build
 
-WASM="target/wasm32-unknown-unknown/release/oyaship_escrow.wasm"
+WASM="target/wasm32-unknown-unknown/release/sendxpress_escrow.wasm"
 if [[ ! -f "$WASM" ]]; then
   echo "ERROR: WASM file not found at $WASM" >&2
   exit 1

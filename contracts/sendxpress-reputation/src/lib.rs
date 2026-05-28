@@ -1,4 +1,4 @@
-//! # OyaShip Reputation Contract
+//! # SendXpress Reputation Contract
 //!
 //! Immutable, on-chain trust scoring for importers and suppliers.
 //!
